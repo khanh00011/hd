@@ -1,0 +1,95 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Users {
+  id                Int         @id @default(autoincrement())
+  email             String      @unique
+  name              String
+  phone             String?
+  password          String
+  address           String?
+  gender            String?
+  birthday          DateTime?
+  is_active         Boolean     @default(true)
+  email_verified_at DateTime?
+  createdAt         DateTime    @default(now()) @map("created_at")
+  updatedAt         DateTime    @updatedAt @map("updated_at")
+  userRoles         UserRoles[]
+
+  @@map("users")
+}
+
+model Roles {
+  id          Int         @id @default(autoincrement())
+  name        String      @unique
+  description String
+  userRoles   UserRoles[]
+
+  @@map("roles")
+}
+
+model UserRoles {
+  id       Int       @id @default(autoincrement())
+  userId   Int       @map("user_id")
+  roleId   Int       @map("role_id")
+  branchId Int?      @map("branch_id")
+  user     Users     @relation(fields: [userId], references: [id])
+  role     Roles     @relation(fields: [roleId], references: [id])
+  branch   Branches? @relation(fields: [branchId], references: [id])
+
+  @@unique([userId, roleId])
+  @@map("user_roles")
+}
+
+model Branches {
+  id          Int         @id @default(autoincrement())
+  name        String
+  address     String
+  description String
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+  userRoles   UserRoles[]
+
+  @@map("branches")
+}
+
+model Media {
+  id        Int       @id @default(autoincrement())
+  modelId   Int?      @map("model_id")
+  modelType String?   @map("model_type")
+  modelName String?   @map("model_name")
+  name      String
+  fileName  String    @map("file_name")
+  src       String
+  type      MediaType
+  mimeType  String    @map("mime_type")
+  size      Int
+  isPrimary Boolean   @default(false) @map("is_primary")
+  alt       String?
+  createdBy Int?      @map("created_by")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@index([modelId, modelType])
+  @@map("media")
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  FILE
+  AUDIO
+  OTHER
+}
